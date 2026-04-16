@@ -1,50 +1,57 @@
-import { useState } from "react";
+import { create } from "zustand";
 
-export const useGameStore = () => {
-    const [score, setScore] = useState(0);
-    const [taps, setTaps] = useState(0);
-    const [doubleTaps, setDoubleTaps] = useState(0);
+interface GameStore {
+    score: number;
+    taps: number;
+    doubleTaps: number;
+    longPressDone: boolean;
+    panDone: boolean;
+    swipeRightDone: boolean;
+    swipeLeftDone: boolean;
+    pinchDone: boolean;
+    isDark: boolean;
 
-    const [longPressDone, setLongPressDone] = useState(false);
-    const [panDone, setPanDone] = useState(false);
-    const [swipeRightDone, setSwipeRightDone] = useState(false);
-    const [swipeLeftDone, setSwipeLeftDone] = useState(false);
-    const [pinchDone, setPinchDone] = useState(false);
+    toggleTheme: () => void;
+    addTap: () => void;
+    addDoubleTap: () => void;
+    setLongPressDone: () => void;
+    setPanDone: () => void;
+    setSwipeRightDone: () => void;
+    setSwipeLeftDone: () => void;
+    setPinchDone: () => void;
+}
 
-    const [isDark, setIsDark] = useState(true);
+export const useGameStore = create<GameStore>((set) => ({
+    score: 0,
+    taps: 0,
+    doubleTaps: 0,
+    longPressDone: false,
+    panDone: false,
+    swipeRightDone: false,
+    swipeLeftDone: false,
+    pinchDone: false,
+    isDark: true,
 
-    return {
-        score,
-        taps,
-        doubleTaps,
-        longPressDone,
-        panDone,
-        swipeRightDone,
-        swipeLeftDone,
-        pinchDone,
+    toggleTheme: () => set((s) => ({ isDark: !s.isDark })),
 
-        isDark,
+    addTap: () => set((s) => ({ score: s.score + 1, taps: s.taps + 1 })),
 
-        toggleTheme: () => setIsDark(prev => !prev),
+    addDoubleTap: () =>
+        set((s) => ({ score: s.score + 2, doubleTaps: s.doubleTaps + 1 })),
 
-        addTap: () => {
-            setScore(s => s + 1);
-            setTaps(t => t + 1);
-        },
+    setLongPressDone: () =>
+        set((s) => ({ score: s.score + 5, longPressDone: true })),
 
-        addDoubleTap: () => {
-            setScore(s => s + 2);
-            setDoubleTaps(d => d + 1);
-        },
-
-        setLongPressDone: () => {
-            setScore(s => s + 10);
-            setLongPressDone(true);
-        },
-
-        setPanDone: () => setPanDone(true),
-        setSwipeRightDone: () => setSwipeRightDone(true),
-        setSwipeLeftDone: () => setSwipeLeftDone(true),
-        setPinchDone: () => setPinchDone(true),
-    };
-};
+    setPanDone: () => set({ panDone: true }),
+    setSwipeRightDone: () =>
+        set((s) => ({
+            swipeRightDone: true,
+            score: s.score + Math.floor(Math.random() * 10) + 1,
+        })),
+    setSwipeLeftDone: () =>
+        set((s) => ({
+            swipeLeftDone: true,
+            score: s.score + Math.floor(Math.random() * 10) + 1,
+        })),
+    setPinchDone: () => set((s) => ({ pinchDone: true, score: s.score + 3 })),
+}));
