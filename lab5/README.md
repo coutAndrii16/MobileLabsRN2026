@@ -1,50 +1,83 @@
-# Welcome to your Expo app 👋
+# Лабораторна робота №5 — Навігація у React Native з Expo Router
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 🚀 Інструкція запуску
 
-## Get started
-
-1. Install dependencies
-
+1. Встановити залежності:
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. Запустити застосунок:
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. Відкрити у:
+   - **Expo Go** (відскануйте QR-код)
+   - **Android-емуляторі** — натисніть `a`
+   - **iOS-симуляторі** — натисніть `i`
+   - **Браузері** — натисніть `w`
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📋 Опис реалізованого функціоналу
 
-## Get a fresh project
+### Структура маршрутів (`/app`)
 
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+app/
+├── _layout.tsx               ← Кореневий layout, обгортає AuthProvider
+├── index.tsx                 ← Редирект на /login
+├── +not-found.tsx            ← Екран 404
+├── (auth)/
+│   ├── _layout.tsx           ← Layout для публічних екранів
+│   ├── login.tsx             ← Екран входу
+│   └── register.tsx          ← Екран реєстрації
+└── (app)/
+    ├── _layout.tsx           ← Захищений layout (перевірка авторизації)
+    ├── index.tsx             ← Каталог товарів
+    └── details/
+        └── [id].tsx          ← Деталі товару (динамічний маршрут)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Реалізовані можливості
 
-## Learn more
+- **AuthContext** — глобальний контекст авторизації зі станом `isAuthenticated` та методами `login`, `register`, `logout`
+- **Публічні екрани** — вхід (`/login`) та реєстрація (`/register`) у групі `(auth)`
+- **Захищена навігація** — група `(app)` з перевіркою авторизації в `_layout.tsx`; неавторизований користувач автоматично перенаправляється на `/login`
+- **Каталог товарів** — `FlatList` з 8 товарами у 2 колонки; кожна картка містить фото, назву та ціну
+- **Динамічний маршрут** — `/details/[id]` відображає повну інформацію про товар за його `id`
+- **404-екран** — `+not-found.tsx` з повідомленням і кнопкою повернення на головну
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 📸 Скріншоти
+![img.png](img.png)
+![img_1.png](img_1.png)
+![img_2.png](img_2.png)
+![img_3.png](img_3.png)
+![img_4.png](img_4.png)
+![img_5.png](img_5.png)
+---
 
-## Join the community
+## Висновки (відповіді на контрольні запитання)
 
-Join our community of developers creating universal apps.
+### 1. Як реалізується перенаправлення неавторизованого користувача?
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+У файлі `app/(app)/_layout.tsx` зчитується `isAuthenticated` з `AuthContext`. Якщо значення `false`, повертається компонент `<Redirect href="/login" />` з `expo-router`, який негайно перенаправляє користувача на екран входу ще до рендерингу захищеного вмісту.
+
+### 2. Різниця між `<Link>` та `router.push()`?
+
+`<Link>` — декларативний компонент, що рендериться безпосередньо в JSX і підходить для навігаційних елементів в UI (кнопки, пункти меню). `router.push()` — програмний метод, викликається в обробниках подій (наприклад, після успішної валідації форми або завершення асинхронної операції), коли навігація відбувається за певної логічної умови.
+
+### 3. Як працюють динамічні маршрути та як отримати параметри?
+
+Файл з ім'ям у квадратних дужках, наприклад `[id].tsx`, реєструє динамічний сегмент маршруту. Expo Router автоматично витягує значення сегмента і передає його через хук `useLocalSearchParams()`. У нашому випадку: `const { id } = useLocalSearchParams<{ id: string }>()` повертає `id` з URL `/details/3`.
+
+### 4. Чому стан авторизації зберігається у React Context, а не в локальному стані?
+
+Стан авторизації потрібен одразу кільком незалежним компонентам у різних частинах дерева: `_layout.tsx` у захищеній групі, кнопка «Вийти» в каталозі, екрани входу й реєстрації. Локальний стан (`useState`) існує лише в межах одного компонента. React Context слугує єдиним глобальним сховищем («single source of truth»), уникаючи prop drilling і забезпечуючи реактивне оновлення будь-якого підписаного компонента при зміні `isAuthenticated`.
+
+### 5. Для чого використовуються групи маршрутів і як вони впливають на URL?
+
+Групи маршрутів (папки у круглих дужках, наприклад `(auth)`, `(app)`) дозволяють логічно організувати файли проєкту та додати спільний `_layout.tsx` для набору екранів — без впливу на URL. Назва групи повністю ігнорується маршрутизатором: файл `app/(auth)/login.tsx` доступний за адресою `/login`, а не `/auth/login`.

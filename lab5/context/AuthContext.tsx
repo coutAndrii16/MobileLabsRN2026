@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { createContext, useContext, useState, type PropsWithChildren } from 'react';
 
 type AuthContextType = {
@@ -13,16 +14,19 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     const login = (email: string, password: string) => {
-        // Mock: будь-які дані — успішний вхід
         setIsAuthenticated(true);
+        router.replace('/(app)');
     };
 
     const register = (email: string, password: string, name: string) => {
-        // Mock: будь-які дані — успішна реєстрація
         setIsAuthenticated(true);
+        router.replace('/(app)');
     };
 
-    const logout = () => setIsAuthenticated(false);
+    const logout = () => {
+        setIsAuthenticated(false);
+        router.replace('/login');
+    };
 
     return (
         <AuthContext.Provider value={{ isAuthenticated, login, register, logout }}>
